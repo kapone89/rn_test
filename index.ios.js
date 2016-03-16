@@ -4,7 +4,8 @@ import React, {
   Component,
   StyleSheet,
   Text,
-  View
+  View,
+  TouchableOpacity
 } from 'react-native';
 
 import { combineReducers, createStore } from 'redux';
@@ -38,9 +39,11 @@ const mapDispatchToProps = (dispatch) => {
 }
 
 const myNumberView = ({ onClick, currentVal }) => (
-  <Text onClick={onClick} style={{fontSize: 100}}>
-    {currentVal}
-  </Text>
+  <TouchableOpacity onPress={onClick}>
+    <Text style={{fontSize: 100}}>
+      {currentVal}
+    </Text>
+  </TouchableOpacity>
 )
 
 const MyNumber = connect(
