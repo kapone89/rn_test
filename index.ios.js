@@ -1,7 +1,3 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- */
 'use strict';
 import React, {
   AppRegistry,
@@ -11,21 +7,55 @@ import React, {
   View
 } from 'react-native';
 
+import { combineReducers, createStore } from 'redux';
+import { connect, Provider } from 'react-redux';
+
+function counter(state = 0, action) {
+  switch (action.type) {
+  case 'INCREMENT':
+    return state + 1;
+  case 'DECREMENT':
+    return state - 1;
+  default:
+    return state;
+  }
+}
+
+let store = createStore(counter)
+
+const mapStateToProps = (state) => {
+  return {
+    currentVal: state
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    onClick: () => {
+      dispatch({type: "INCREMENT"})
+    }
+  }
+}
+
+const myNumberView = ({ onClick, currentVal }) => (
+  <Text onClick={onClick} style={{fontSize: 100}}>
+    {currentVal}
+  </Text>
+)
+
+const MyNumber = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(myNumberView)
+
 class MonteOffice extends Component {
   render() {
     return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Welcome to React Native!
-        </Text>
-        <Text style={styles.instructions}>
-          To get started, edit index.ios.js
-        </Text>
-        <Text style={styles.instructions}>
-          Press Cmd+R to reload,{'\n'}
-          Cmd+D or shake for dev menu
-        </Text>
-      </View>
+      <Provider store={store}>
+        <View style={styles.container}>
+          <MyNumber />
+        </View>
+      </Provider>
     );
   }
 }
@@ -36,17 +66,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
+  }
 });
 
 AppRegistry.registerComponent('MonteOffice', () => MonteOffice);
