@@ -10,6 +10,7 @@ import React, {
 
 import { combineReducers, createStore } from 'redux';
 import { connect, Provider } from 'react-redux';
+import { Button } from 'react-native-material-design';
 
 function counter(state = 0, action) {
   switch (action.type) {
@@ -32,18 +33,23 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    onClick: () => {
+    incrementCallback: () => {
       dispatch({type: "INCREMENT"})
+    },
+    decrementCallback: () => {
+      dispatch({type: "DECREMENT"})
     }
   }
 }
 
-const myNumberView = ({ onClick, currentVal }) => (
-  <TouchableOpacity onPress={onClick}>
+const myNumberView = ({ incrementCallback, decrementCallback, currentVal }) => (
+  <View>
     <Text style={{fontSize: 100}}>
       {currentVal}
     </Text>
-  </TouchableOpacity>
+    <Button text='Increment' raised={true} onPress={incrementCallback}/>
+    <Button text='Decrement' raised={true} onPress={decrementCallback}/>
+  </View>
 )
 
 const MyNumber = connect(
