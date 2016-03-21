@@ -11,13 +11,12 @@ import React, {
 import { combineReducers, createStore } from 'redux';
 import { connect, Provider } from 'react-redux';
 import { Button } from 'react-native-material-design';
-import { id3 } from 'id3js';
 import { fetch } from 'fetch';
 
 let initialState = {
   nowPlayingUrl: null,
   nowPlayingTitle: "unknown",
-  streamsSearchResults: []
+  streamsSearchResults: [],
 };
 
 function reducer(state = initialState, action) {
@@ -25,8 +24,7 @@ function reducer(state = initialState, action) {
   case 'NOW_PLAYING_RELOAD':
     return Object.assign({}, state, {nowPlayingTitle: "reloading..."});
   case 'NOW_PLAYING_FETCHED':
-    console.log({action: state});
-    return Object.assign({}, state, {nowPlayingTitle: state.response});
+    return Object.assign({}, state, {nowPlayingTitle: action.response.address});
   default:
     return state;
   }
