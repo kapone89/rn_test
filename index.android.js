@@ -24,7 +24,7 @@ function reducer(state = initialState, action) {
   case 'NOW_PLAYING_RELOAD':
     return Object.assign({}, state, {nowPlayingTitle: "reloading..."});
   case 'NOW_PLAYING_FETCHED':
-    return Object.assign({}, state, {nowPlayingTitle: action.response.address});
+    return Object.assign({}, state, {nowPlayingTitle: action.data.name});
   default:
     return state;
   }
@@ -46,7 +46,18 @@ const mapDispatchToProps = (dispatch) => {
       fetch('http://172.20.0.35:8080/')
         .then((response) => response.json())
         .then((responseJson) => {
-          dispatch({type: "NOW_PLAYING_FETCHED", response: responseJson});
+
+          var mediaRequest = new XMLHttpRequest();
+          mediaRequest.open('GET', responseJson.address);
+          mediaRequest.send()
+          setTimeout(function () {
+            var actionData = {
+              url: responseJson.address,
+              name: mediaRequest.getResponseHeader("icy-name"),
+            }
+            dispatch({type: "NOW_PLAYING_FETCHED", data: actionData});
+            mediaRequest.abort()
+          }, 500);
         })
     }
   }
