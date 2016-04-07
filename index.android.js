@@ -17,6 +17,7 @@ let initialState = {
   nowPlayingUrl: null,
   nowPlayingTitle: "unknown",
   streamsSearchResults: [],
+  volume: 0,
 };
 
 function reducer(state = initialState, action) {
@@ -24,7 +25,9 @@ function reducer(state = initialState, action) {
   case 'NOW_PLAYING_RELOAD':
     return Object.assign({}, state, {nowPlayingTitle: "reloading..."});
   case 'NOW_PLAYING_FETCHED':
-    return Object.assign({}, state, {nowPlayingTitle: action.data.name});
+    return Object.assign({}, state, {nowPlayingTitle: action.data.name, nowPlayingUrl: action.url, volume: action.volume});
+  case 'CHANGE_VOLUME':
+    return Object.assign({}, state, {volume: (state.volume + action.diff)});
   default:
     return state;
   }
@@ -34,8 +37,36 @@ let store = createStore(reducer)
 
 const mapStateToProps = (state) => {
   return {
-    nowPlayingTitle: state.nowPlayingTitle
+    nowPlayingTitle: state.nowPlayingTitle,
+    volume: state.volume,
   }
+}
+
+const getStreamMeta = (url, callback) => {
+  var mediaRequest = new XMLHttpRequest();
+  mediaRequest.open('GET', url);
+  mediaRequest.send()
+  setTimeout(function () {
+    var meta = {
+      name: mediaRequest.getResponseHeader("icy-name"),
+    }
+    callback(meta);
+    mediaRequest.abort()
+  }, 500);
+}
+
+const changeVolume = () => {
+  fetch('http://172.20.0.35:8080/', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      volume: store.getState().volume,
+      address: store.getState().nowPlayingUrl,
+    })
+  });
 }
 
 const mapDispatchToProps = (dispatch) => {
@@ -46,29 +77,33 @@ const mapDispatchToProps = (dispatch) => {
       fetch('http://172.20.0.35:8080/')
         .then((response) => response.json())
         .then((responseJson) => {
-
-          var mediaRequest = new XMLHttpRequest();
-          mediaRequest.open('GET', responseJson.address);
-          mediaRequest.send()
-          setTimeout(function () {
-            var actionData = {
-              url: responseJson.address,
-              name: mediaRequest.getResponseHeader("icy-name"),
-            }
-            dispatch({type: "NOW_PLAYING_FETCHED", data: actionData});
-            mediaRequest.abort()
-          }, 500);
+          getStreamMeta(responseJson.address, (meta) => {
+            dispatch({type: "NOW_PLAYING_FETCHED", data: meta, url: responseJson.address, volume: responseJson.volume});
+          });
         })
-    }
+    },
+    volumeUp: () => {
+      dispatch({type: "CHANGE_VOLUME", diff: 10});
+      changeVolume();
+    },
+    volumeDown: () => {
+      dispatch({type: "CHANGE_VOLUME", diff: -10});
+      changeVolume();
+    },
   }
 }
 
-const toiletControlView = ({ nowPlayingTitle, reloadNowPlaying }) => (
+const toiletControlView = ({ nowPlayingTitle, volume, reloadNowPlaying, volumeUp, volumeDown }) => (
   <View>
     <Text style={{fontSize: 20}}>
       Now playing: {nowPlayingTitle}
     </Text>
+    <Text style={{fontSize: 20}}>
+      Volume: {volume}
+    </Text>
     <Button text='REFRESH' raised={true} onPress={reloadNowPlaying}/>
+    <Button text='VOL +' raised={true} onPress={volumeUp}/>
+    <Button text='VOL -' raised={true} onPress={volumeDown}/>
   </View>
 )
 
