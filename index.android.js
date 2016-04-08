@@ -76,8 +76,7 @@ const searchStations = (query, callback) => {
   fetch('http://www.radiosure.com/rsdbms/search.php?status=active&search=jazz24&pos=0&reset_pos=0')
     .then((response) => response.text())
     .then((responseText) => {
-      // console.log(responseText);
-      var doc = new DOMParser().parseFromString(responseText)
+      var doc = new DOMParser({errorHandler: {}}).parseFromString(responseText)
       var nodes = select("//a[contains(@href, 'details.php')]", doc)
       var results = nodes.map((n) => {
         return {
