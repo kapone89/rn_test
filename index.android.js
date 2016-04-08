@@ -12,6 +12,8 @@ import { combineReducers, createStore } from 'redux';
 import { connect, Provider } from 'react-redux';
 import { Button } from 'react-native-material-design';
 import { fetch } from 'fetch';
+import { DOMParser } from 'xmldom';
+import { select } from 'xpath';
 
 let initialState = {
   nowPlayingUrl: null,
@@ -69,6 +71,24 @@ const changeVolume = () => {
   });
 }
 
+const searchStations = (query, callback) => {
+  console.log("search...");
+  fetch('http://www.radiosure.com/rsdbms/search.php?status=active&search=jazz24&pos=0&reset_pos=0')
+    .then((response) => response.text())
+    .then((responseText) => {
+      // console.log(responseText);
+      var doc = new DOMParser().parseFromString(responseText)
+      var nodes = select("//a[contains(@href, 'details.php')]", doc)
+      var results = nodes.map((n) => {
+        return {
+          name: n.textContent,
+          url: ("http://www.radiosure.com/rsdbms/" + n.attributes[0].nodeValue)
+        }
+      })
+      console.log(results);
+    })
+}
+
 const mapDispatchToProps = (dispatch) => {
   return {
     reloadNowPlaying: () => {
@@ -90,10 +110,13 @@ const mapDispatchToProps = (dispatch) => {
       dispatch({type: "CHANGE_VOLUME", diff: -10});
       changeVolume();
     },
+    searchStations: () => {
+      searchStations(null, null);
+    }
   }
 }
 
-const toiletControlView = ({ nowPlayingTitle, volume, reloadNowPlaying, volumeUp, volumeDown }) => (
+const toiletControlView = ({ nowPlayingTitle, volume, reloadNowPlaying, volumeUp, volumeDown, searchStations }) => (
   <View>
     <Text style={{fontSize: 20}}>
       Now playing: {nowPlayingTitle}
@@ -104,6 +127,7 @@ const toiletControlView = ({ nowPlayingTitle, volume, reloadNowPlaying, volumeUp
     <Button text='REFRESH' raised={true} onPress={reloadNowPlaying}/>
     <Button text='VOL +' raised={true} onPress={volumeUp}/>
     <Button text='VOL -' raised={true} onPress={volumeDown}/>
+    <Button text='search...' raised={true} onPress={searchStations}/>
   </View>
 )
 
