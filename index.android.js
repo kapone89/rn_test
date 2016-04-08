@@ -5,7 +5,8 @@ import React, {
   StyleSheet,
   Text,
   View,
-  TouchableOpacity
+  TouchableOpacity,
+  ListView
 } from 'react-native';
 
 import { combineReducers, createStore } from 'redux';
@@ -30,6 +31,8 @@ function reducer(state = initialState, action) {
     return Object.assign({}, state, {nowPlayingTitle: action.data.name, nowPlayingUrl: action.url, volume: action.volume});
   case 'CHANGE_VOLUME':
     return Object.assign({}, state, {volume: (state.volume + action.diff)});
+  case 'SEARCH_RESULTS_FETCHED':
+    return Object.assign({}, state, {streamsSearchResults: action.results});
   default:
     return state;
   }
@@ -41,6 +44,7 @@ const mapStateToProps = (state) => {
   return {
     nowPlayingTitle: state.nowPlayingTitle,
     volume: state.volume,
+    streamsSearchResults: state.streamsSearchResults,
   }
 }
 
@@ -84,7 +88,7 @@ const searchStations = (query, callback) => {
           url: ("http://www.radiosure.com/rsdbms/" + n.attributes[0].nodeValue)
         }
       })
-      console.log(results);
+      callback(results);
     })
 }
 
@@ -110,12 +114,15 @@ const mapDispatchToProps = (dispatch) => {
       changeVolume();
     },
     searchStations: () => {
-      searchStations(null, null);
+      searchStations(null, (results) => {
+        dispatch({type: "SEARCH_RESULTS_FETCHED", results: results});
+        console.log(store.getState());
+      });
     }
   }
 }
 
-const toiletControlView = ({ nowPlayingTitle, volume, reloadNowPlaying, volumeUp, volumeDown, searchStations }) => (
+const toiletControlView = ({ nowPlayingTitle, volume, reloadNowPlaying, volumeUp, volumeDown, searchStations, streamsSearchResults }) => (
   <View>
     <Text style={{fontSize: 20}}>
       Now playing: {nowPlayingTitle}
@@ -127,6 +134,9 @@ const toiletControlView = ({ nowPlayingTitle, volume, reloadNowPlaying, volumeUp
     <Button text='VOL +' raised={true} onPress={volumeUp}/>
     <Button text='VOL -' raised={true} onPress={volumeDown}/>
     <Button text='search...' raised={true} onPress={searchStations}/>
+    {streamsSearchResults.map((station) => {
+      return <Text key={station.url} style={{fontSize: 20}}>{station.name}</Text>
+    })}
   </View>
 )
 
