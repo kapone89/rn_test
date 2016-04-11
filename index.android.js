@@ -19,6 +19,7 @@ import { select } from 'xpath';
 let initialState = {
   nowPlayingUrl: null,
   nowPlayingTitle: "unknown",
+  stationsSearchResults: [],
   streamsSearchResults: [],
   volume: 0,
 };
@@ -31,7 +32,9 @@ function reducer(state = initialState, action) {
     return Object.assign({}, state, {nowPlayingTitle: action.data.name, nowPlayingUrl: action.url, volume: action.volume});
   case 'CHANGE_VOLUME':
     return Object.assign({}, state, {volume: (state.volume + action.diff)});
-  case 'SEARCH_RESULTS_FETCHED':
+  case 'STATIONS_FETCHED':
+    return Object.assign({}, state, {stationsSearchResults: action.results});
+  case 'STREAMS_FETCHED':
     return Object.assign({}, state, {streamsSearchResults: action.results});
   default:
     return state;
@@ -44,6 +47,7 @@ const mapStateToProps = (state) => {
   return {
     nowPlayingTitle: state.nowPlayingTitle,
     volume: state.volume,
+    stationsSearchResults: state.stationsSearchResults,
     streamsSearchResults: state.streamsSearchResults,
   }
 }
@@ -92,6 +96,34 @@ const searchStations = (query, callback) => {
     })
 }
 
+const searchStreams = (stationDetailsUrl, callback) => {
+  fetch(stationDetailsUrl)
+  .then((response) => response.text())
+  .then((responseText) => {
+    var doc = new DOMParser({errorHandler: {}}).parseFromString(responseText)
+    var nodes = select("//tr[contains(.//td, 'Source ')]//a", doc)
+    var results = nodes.map((n, id) => {
+      return {url: n.textContent, id: id};
+    })
+    callback(results);
+    console.log(results);
+  })
+}
+
+const selectStream = (streamUrl) => {
+  fetch('http://172.20.0.35:8080/', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      volume: store.getState().volume,
+      address: streamUrl,
+    })
+  });
+}
+
 const mapDispatchToProps = (dispatch) => {
   return {
     reloadNowPlaying: () => {
@@ -115,14 +147,24 @@ const mapDispatchToProps = (dispatch) => {
     },
     searchStations: () => {
       searchStations(null, (results) => {
-        dispatch({type: "SEARCH_RESULTS_FETCHED", results: results});
+        dispatch({type: "STATIONS_FETCHED", results: results});
         console.log(store.getState());
       });
-    }
+    },
+    searchStreams: (stationDetailsUrl) => {
+      searchStreams(stationDetailsUrl, (results) => {
+        dispatch({type: "STREAMS_FETCHED", results: results});
+        console.log(store.getState());
+      });
+    },
+    selectStream: (streamUrl) => {
+      selectStream(streamUrl);
+    },
   }
 }
 
-const toiletControlView = ({ nowPlayingTitle, volume, reloadNowPlaying, volumeUp, volumeDown, searchStations, streamsSearchResults }) => (
+const toiletControlView = ({ nowPlayingTitle, volume, reloadNowPlaying, volumeUp, volumeDown,
+  searchStations, stationsSearchResults, searchStreams, streamsSearchResults, selectStream }) => (
   <View>
     <Text style={{fontSize: 20}}>
       Now playing: {nowPlayingTitle}
@@ -134,8 +176,17 @@ const toiletControlView = ({ nowPlayingTitle, volume, reloadNowPlaying, volumeUp
     <Button text='VOL +' raised={true} onPress={volumeUp}/>
     <Button text='VOL -' raised={true} onPress={volumeDown}/>
     <Button text='search...' raised={true} onPress={searchStations}/>
-    {streamsSearchResults.map((station) => {
-      return <Text key={station.url} style={{fontSize: 20}}>{station.name}</Text>
+    <Text style={{fontSize: 20}}>
+      Stations:
+    </Text>
+    {stationsSearchResults.map((station) => {
+      return <Button text={station.name} key={station.url} raised={true} onPress={() => {searchStreams(station.url)}}/>
+    })}
+    <Text style={{fontSize: 20}}>
+      Streams:
+    </Text>
+    {streamsSearchResults.map((stream) => {
+      return <Button text={stream.url} key={stream.id} raised={true} onPress={() => {selectStream(station.url)}}/>
     })}
   </View>
 )
