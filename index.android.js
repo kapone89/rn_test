@@ -7,7 +7,8 @@ import React, {
   View,
   TouchableOpacity,
   ListView,
-  TextInput
+  TextInput,
+  ScrollView,
 } from 'react-native';
 
 import { combineReducers, createStore } from 'redux';
@@ -51,6 +52,7 @@ let store = createStore(reducer)
 const mapStateToProps = (state) => {
   return {
     nowPlayingTitle: state.nowPlayingTitle,
+    nowPlayingUrl: state.nowPlayingUrl,
     volume: state.volume,
     stationsSearchResults: state.stationsSearchResults,
     streamsSearchResults: state.streamsSearchResults,
@@ -86,14 +88,12 @@ const changeVolume = () => {
 }
 
 const searchStations = (callback) => {
-  console.log("search...");
   let params = {
     status: "active",
     search: store.getState().stationSearchQuery,
     pos: 0,
     reset_pos: 0,
   }
-  console.log(stringify(params))
   fetch('http://www.radiosure.com/rsdbms/search.php?' + stringify(params))
     .then((response) => response.text())
     .then((responseText) => {
@@ -119,7 +119,6 @@ const searchStreams = (stationDetailsUrl, callback) => {
       return {url: n.textContent, id: id};
     })
     callback(results);
-    console.log(results);
   })
 }
 
@@ -161,13 +160,11 @@ const mapDispatchToProps = (dispatch) => {
     searchStations: () => {
       searchStations((results) => {
         dispatch({type: "STATIONS_FETCHED", results: results});
-        console.log(store.getState());
       });
     },
     searchStreams: (stationDetailsUrl) => {
       searchStreams(stationDetailsUrl, (results) => {
         dispatch({type: "STREAMS_FETCHED", results: results});
-        console.log(store.getState());
       });
     },
     selectStream: (streamUrl) => {
@@ -179,12 +176,15 @@ const mapDispatchToProps = (dispatch) => {
   }
 }
 
-const toiletControlView = ({ nowPlayingTitle, volume, reloadNowPlaying, volumeUp, volumeDown,
+const toiletControlView = ({ nowPlayingTitle, nowPlayingUrl, volume, reloadNowPlaying, volumeUp, volumeDown,
   searchStations, stationsSearchResults, searchStreams, streamsSearchResults, selectStream,
   stationSearchQuery, updateStationQuery }) => (
-  <View>
+  <ScrollView>
     <Text style={{fontSize: 20}}>
       Now playing: {nowPlayingTitle}
+    </Text>
+    <Text style={{fontSize: 20}}>
+      URL: {nowPlayingUrl}
     </Text>
     <Text style={{fontSize: 20}}>
       Volume: {volume}
@@ -204,9 +204,9 @@ const toiletControlView = ({ nowPlayingTitle, volume, reloadNowPlaying, volumeUp
       Streams:
     </Text>
     {streamsSearchResults.map((stream) => {
-      return <Button text={stream.url} key={stream.id} raised={true} onPress={() => {selectStream(station.url)}}/>
+      return <Button text={stream.url} key={stream.id} raised={true} onPress={() => {selectStream(stream.url)}}/>
     })}
-  </View>
+  </ScrollView>
 )
 
 const ToiletControl = connect(
