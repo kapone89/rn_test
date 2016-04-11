@@ -6,7 +6,8 @@ import React, {
   Text,
   View,
   TouchableOpacity,
-  ListView
+  ListView,
+  TextInput
 } from 'react-native';
 
 import { combineReducers, createStore } from 'redux';
@@ -15,12 +16,14 @@ import { Button } from 'react-native-material-design';
 import { fetch } from 'fetch';
 import { DOMParser } from 'xmldom';
 import { select } from 'xpath';
+import { stringify } from 'query-string';
 
 let initialState = {
   nowPlayingUrl: null,
   nowPlayingTitle: "unknown",
   stationsSearchResults: [],
   streamsSearchResults: [],
+  stationSearchQuery: "",
   volume: 0,
 };
 
@@ -36,6 +39,8 @@ function reducer(state = initialState, action) {
     return Object.assign({}, state, {stationsSearchResults: action.results});
   case 'STREAMS_FETCHED':
     return Object.assign({}, state, {streamsSearchResults: action.results});
+  case 'UPDATE_STATION_QUERY':
+    return Object.assign({}, state, {stationSearchQuery: action.query});
   default:
     return state;
   }
@@ -49,6 +54,7 @@ const mapStateToProps = (state) => {
     volume: state.volume,
     stationsSearchResults: state.stationsSearchResults,
     streamsSearchResults: state.streamsSearchResults,
+    stationSearchQuery: state.stationSearchQuery,
   }
 }
 
@@ -79,9 +85,16 @@ const changeVolume = () => {
   });
 }
 
-const searchStations = (query, callback) => {
+const searchStations = (callback) => {
   console.log("search...");
-  fetch('http://www.radiosure.com/rsdbms/search.php?status=active&search=jazz24&pos=0&reset_pos=0')
+  let params = {
+    status: "active",
+    search: store.getState().stationSearchQuery,
+    pos: 0,
+    reset_pos: 0,
+  }
+  console.log(stringify(params))
+  fetch('http://www.radiosure.com/rsdbms/search.php?' + stringify(params))
     .then((response) => response.text())
     .then((responseText) => {
       var doc = new DOMParser({errorHandler: {}}).parseFromString(responseText)
@@ -146,7 +159,7 @@ const mapDispatchToProps = (dispatch) => {
       changeVolume();
     },
     searchStations: () => {
-      searchStations(null, (results) => {
+      searchStations((results) => {
         dispatch({type: "STATIONS_FETCHED", results: results});
         console.log(store.getState());
       });
@@ -160,11 +173,15 @@ const mapDispatchToProps = (dispatch) => {
     selectStream: (streamUrl) => {
       selectStream(streamUrl);
     },
+    updateStationQuery: (newQuery) => {
+      dispatch({type: "UPDATE_STATION_QUERY", query: newQuery});
+    },
   }
 }
 
 const toiletControlView = ({ nowPlayingTitle, volume, reloadNowPlaying, volumeUp, volumeDown,
-  searchStations, stationsSearchResults, searchStreams, streamsSearchResults, selectStream }) => (
+  searchStations, stationsSearchResults, searchStreams, streamsSearchResults, selectStream,
+  stationSearchQuery, updateStationQuery }) => (
   <View>
     <Text style={{fontSize: 20}}>
       Now playing: {nowPlayingTitle}
@@ -175,6 +192,7 @@ const toiletControlView = ({ nowPlayingTitle, volume, reloadNowPlaying, volumeUp
     <Button text='REFRESH' raised={true} onPress={reloadNowPlaying}/>
     <Button text='VOL +' raised={true} onPress={volumeUp}/>
     <Button text='VOL -' raised={true} onPress={volumeDown}/>
+    <TextInput onChangeText={(text) => { updateStationQuery(text) }}/>
     <Button text='search...' raised={true} onPress={searchStations}/>
     <Text style={{fontSize: 20}}>
       Stations:
