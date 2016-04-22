@@ -13,7 +13,7 @@ import React, {
 
 import { combineReducers, createStore } from 'redux';
 import { connect, Provider } from 'react-redux';
-import { Button } from 'react-native-material-design';
+import { Button, Toolbar } from 'react-native-material-design';
 import { fetch } from 'fetch';
 import { DOMParser } from 'xmldom';
 import { select } from 'xpath';
@@ -180,6 +180,7 @@ const toiletControlView = ({ nowPlayingTitle, nowPlayingUrl, volume, reloadNowPl
   searchStations, stationsSearchResults, searchStreams, streamsSearchResults, selectStream,
   stationSearchQuery, updateStationQuery }) => (
   <ScrollView>
+    <Toolbar title="ToiletDJ" icon="menu" actions={[{icon: "refresh", onPress: reloadNowPlaying}]}/>
     <Text style={{fontSize: 20}}>
       Now playing: {nowPlayingTitle}
     </Text>
