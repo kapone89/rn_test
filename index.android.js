@@ -181,32 +181,33 @@ const toiletControlView = ({ nowPlayingTitle, nowPlayingUrl, volume, reloadNowPl
   stationSearchQuery, updateStationQuery }) => (
   <ScrollView>
     <Toolbar title="ToiletDJ" icon="menu" actions={[{icon: "refresh", onPress: reloadNowPlaying}]}/>
-    <Text style={{fontSize: 20}}>
-      Now playing: {nowPlayingTitle}
-    </Text>
-    <Text style={{fontSize: 20}}>
-      URL: {nowPlayingUrl}
-    </Text>
-    <Text style={{fontSize: 20}}>
-      Volume: {volume}
-    </Text>
-    <Button text='REFRESH' raised={true} onPress={reloadNowPlaying}/>
-    <Button text='VOL +' raised={true} onPress={volumeUp}/>
-    <Button text='VOL -' raised={true} onPress={volumeDown}/>
-    <TextInput onChangeText={(text) => { updateStationQuery(text) }}/>
-    <Button text='search...' raised={true} onPress={searchStations}/>
-    <Text style={{fontSize: 20}}>
-      Stations:
-    </Text>
-    {stationsSearchResults.map((station) => {
-      return <Button text={station.name} key={station.url} raised={true} onPress={() => {searchStreams(station.url)}}/>
-    })}
-    <Text style={{fontSize: 20}}>
-      Streams:
-    </Text>
-    {streamsSearchResults.map((stream) => {
-      return <Button text={stream.url} key={stream.id} raised={true} onPress={() => {selectStream(stream.url)}}/>
-    })}
+    <View style={{marginTop: 60}}>
+      <Text style={{fontSize: 20}}>
+        Now playing: {nowPlayingTitle}
+      </Text>
+      <Text style={{fontSize: 20}}>
+        URL: {nowPlayingUrl}
+      </Text>
+      <Text style={{fontSize: 20}}>
+        Volume: {volume}
+      </Text>
+      <Button text='VOL +' raised={true} onPress={volumeUp}/>
+      <Button text='VOL -' raised={true} onPress={volumeDown}/>
+      <TextInput onChangeText={(text) => { updateStationQuery(text) }}/>
+      <Button text='search...' raised={true} onPress={searchStations}/>
+      <Text style={{fontSize: 20}}>
+        Stations:
+      </Text>
+      {stationsSearchResults.map((station) => {
+        return <Button text={station.name} key={station.url} raised={true} onPress={() => {searchStreams(station.url)}}/>
+      })}
+      <Text style={{fontSize: 20}}>
+        Streams:
+      </Text>
+      {streamsSearchResults.map((stream) => {
+        return <Button text={stream.url} key={stream.id} raised={true} onPress={() => {selectStream(stream.url)}}/>
+      })}
+    </View>
   </ScrollView>
 )
 
